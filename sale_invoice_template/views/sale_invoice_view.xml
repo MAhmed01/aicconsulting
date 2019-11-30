@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<odoo>
+	<data>
+
+		<template id="report_sale_summary_invoice" >
+			<t t-call="web.external_layout">
+				<t t-set="o" t-value="o.with_context(lang=lang)" />
+				<t t-set="address">
+					<address t-field="o.partner_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}' />
+					<div t-if="o.partner_id.vat" class="mt16"><t t-esc="o.company_id.country_id.vat_label or 'Tax ID'"/>: <span t-field="o.partner_id.vat"/></div>
+				</t>
+				<div class="page">
+					<h2>
+						<span t-if="o.type == 'out_invoice' and o.state in ('open', 'in_payment', 'paid')">Invoice</span>
+						<span t-if="o.type == 'out_invoice' and o.state == 'draft'">Draft Invoice</span>
+						<span t-if="o.type == 'out_invoice' and o.state == 'cancel'">Cancelled Invoice</span>
+						<span t-if="o.type == 'out_refund'">Credit Note</span>
+						<span t-if="o.type == 'in_refund'">Vendor Credit Note</span>
+						<span t-if="o.type == 'in_invoice'">Vendor Bill</span>
+						<span t-field="o.number"/>
+					</h2>
+
+					<div id="informations" class="row mt32 mb32">
+						<div class="col-auto mw-100 mb-2" t-if="o.name" name="description">
+							<strong>Description:</strong>
+							<p class="m-0" t-field="o.name"/>
+						</div>
+						<div class="col-auto mw-100 mb-2" t-if="o.date_invoice" name="invoice_date">
+							<strong>Invoice Date:</strong>
+							<p class="m-0" t-field="o.date_invoice"/>
+						</div>
+						<div class="col-auto mw-100 mb-2" t-if="o.date_due and o.type == 'out_invoice' and o.state in ('open', 'in_payment', 'paid')" name="due_date">
+							<strong>Due Date:</strong>
+							<p class="m-0" t-field="o.date_due"/>
+						</div>
+						<div class="col-auto mw-100 mb-2" t-if="o.origin" name="origin">
+							<strong>Source:</strong>
+							<p class="m-0" t-field="o.origin"/>
+						</div>
+						<div class="col-auto mw-100 mb-2" t-if="o.partner_id.ref" name="customer_code">
+							<strong>Customer Code:</strong>
+							<p class="m-0" t-field="o.partner_id.ref"/>
+						</div>
+						<div name="reference" class="col-auto mw-100 mb-2" t-if="o.reference">
+							<strong>Reference:</strong>
+							<p class="m-0" t-field="o.reference"/>
+						</div>
+					</div>
+
+					<t t-set="display_discount" t-value="any([l.discount for l in o.invoice_line_ids])"/>
+
+					<t t-set="sale_orders" t-value="o._get_sales_details()"/>
+					<t t-if="o.from_sale">
+						<table class="table table-sm o_main_table" name="invoice_line_table">
+							<thead>
+								<tr>
+									<t t-set="colspan" t-value="5"/>
+									<th class="text-left"><span>Index</span></th>
+									<th class="text-left"><span>Description</span></th>
+									<th class="text-left"><span>Total Amount</span></th>
+									<th class="text-left"><span>Tax Applied</span></th>
+									<th class="text-left"><span>Total with Taxes</span></th>
+								</tr>
+							</thead>
+							<tbody class="invoice_tbody">
+								<t t-set="current_subtotal" t-value="0"/>
+								<t t-set="index" t-value="0"/>
+								<t t-foreach="o.sale_ids" t-as="so">
+									<t t-set="index" t-value="index + 1"/>
+									<tr>
+										<td><span t-esc="index"/></td>
+										<td><span t-field="so.name"/>, <span t-field="so.client_order_ref"/></td>
+										<td><span t-esc="so.amount_untaxed" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+										<td><span t-esc="so.amount_tax" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+										<td><span t-esc="so.amount_total" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+									</tr>
+								</t>
+							</tbody>
+						</table>
+					</t>
+
+					<div class="clearfix">
+						<t t-if="o.from_sale">
+							<div id="total" class="row">
+								<div t-attf-class="#{'col-4' if report_type != 'html' else 'col-sm-7 col-md-5'} ml-auto">
+									<table class="table table-sm;page-break-inside: avoid;">
+										<tr class="border-black o_subtotal" style="">
+											<td><strong>Subtotal</strong></td>
+											<td class="text-right">
+												<span t-field="o.amount_untaxed"/>
+											</td>
+										</tr>
+										<tr class="border-black o_total">
+											<td><strong>Total</strong></td>
+											<td class="text-right">
+												<span t-field="o.amount_total"/>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+						</t>
+					</div>
+					<p t-if="o.reference">
+						Please use the following communication for your payment : <b><span t-field="o.reference"/></b>
+					</p>
+					<p t-if="o.comment" name="comment">
+						<span t-field="o.comment"/>
+					</p>
+					<p t-if="o.payment_term_id" name="payment_term">
+						<span t-field="o.payment_term_id.note"/>
+					</p>
+					<p t-if="o.fiscal_position_id.note" name="note">
+						<span t-field="o.fiscal_position_id.note"/>
+					</p>
+					<div id="qrcode" t-if="(o.company_id.qr_code) and (o.currency_id.name == 'EUR') and (o.partner_bank_id.acc_number != False)">
+						<p t-if="(o.partner_bank_id.qr_code_valid)">
+							<strong class="text-center">Scan me with your banking app.</strong><br /><br />
+							<img class="border border-dark rounded" t-att-src="o.partner_bank_id.build_qr_code_url(o.residual,(o.reference) if (o.reference) else o.number)"/>
+						</p>
+						<p t-if="(o.partner_bank_id.qr_code_valid == False)">
+							<strong class="text-center">The SEPA QR Code informations are not set correctly.</strong><br />
+						</p>
+					</div>
+				</div>
+			</t>
+		</template>
+
+		<template id="sale_invoice_template.report_sale_summary_invoices">
+			<t t-call="web.html_container">
+				<t t-foreach="docs" t-as="o">
+					<t t-set="lang" t-value="o.user_id.lang if o.type in ('in_invoice', 'in_refund') else o.partner_id.lang"/>
+					<t t-call="sale_invoice_template.report_sale_summary_invoice" t-lang="lang"/>
+				</t>
+			</t>
+		</template>
+
+		<report
+			id="account_invoices_sales"
+			model="account.invoice"
+			string="Sale Summary Invoices"
+			report_type="qweb-pdf"
+			name="sale_invoice_template.report_sale_summary_invoices"
+			file="sale_invoice_template.report_sale_summary_invoices"
+			attachment="(object.state in ('open','in_payment','paid')) and ('INV'+(object.number or '').replace('/','')+'.pdf')"
+			print_report_name="(object._get_report_base_filename())"
+			groups="account.group_account_invoice"
+		/>
+
+		
+	</data>
+</odoo>
+
+
