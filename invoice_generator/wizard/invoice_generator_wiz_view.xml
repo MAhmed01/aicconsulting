@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Wizard view for XMl Generator -->
+    <record id="view_invoice_generator_wizard" model="ir.ui.view">
+        <field name="name">My Market GRV Import</field>
+        <field name="model">invoice.generator.wiz</field>
+        <field name="arch" type="xml">
+            <form string="Invoice Generator">
+                <group>
+                    <field name="xml_file"/>
+                </group>
+                <footer>
+                    <button string="Generate Invoice" name="action_generate_invoice" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-default" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Xml Generator wizard -->
+    <record id="action_invoice_generator_wizard" model="ir.actions.act_window">
+        <field name="name">My Market GRV Import</field>
+        <field name="res_model">invoice.generator.wiz</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_invoice_generator_wizard"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="invoice_generator_wizard_main_menu"
+        name="My Market GRV Import"
+        parent = 'purchase.menu_purchase_root'
+        action="action_invoice_generator_wizard"
+    />
+
+       <!--    Account Invoice form inhirit-->
+    <record id="view_account_invoice_form_inherit" model="ir.ui.view">
+        <field name="name">account.invoice.form</field>
+        <field name="model">account.invoice</field>
+        <field name="inherit_id" ref="account.invoice_form"/>
+        <field name="arch" type="xml">
+             <xpath expr='//form/header' position="inside">
+                 <button name='generate_excel' string='Accpac Sales Invoice Export' type='object' class='oe_highlight' attrs="{'invisible': [('type','=','in_invoice')]}"/>
+            </xpath>
+        </field>
+    </record>
+
+
+
+</odoo>
