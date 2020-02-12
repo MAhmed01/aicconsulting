@@ -1,0 +1,29 @@
+<odoo>
+
+        <!-- xml excel -->
+        <record id="view_modele_xls_form" model="ir.ui.view">
+            <field name="name">sale.invoice.excel.report.wiz.form</field>
+            <field name="model">sale.invoice.excel.report.wiz</field>
+            <field name="arch" type="xml">
+                <form string="Excel Report file">
+                    <group>
+                        <field name="report_excel_file" readonly="1" filename="report_file_name"/>
+                        <field name="report_file_name" invisible="1"/>
+                    </group>
+                    <footer>
+                        <button string="Close" class="oe_highlight" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+<!--        <record id="action_modele_xls_form" model="ir.actions.act_window">-->
+<!--            <field name="name">Reportes Excel</field>-->
+<!--            <field name="view_id" ref="view_modele_xls_form"/>-->
+<!--            <field name="view_type">form</field>-->
+<!--            <field name="view_mode">form</field>-->
+<!--            <field name="res_model">sale.invoice.excel.report.wiz</field>-->
+<!--            <field name="target">new</field>-->
+<!--        </record>-->
+
+</odoo>
